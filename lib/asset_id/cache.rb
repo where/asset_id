@@ -7,8 +7,8 @@ module AssetID
       @cache = {}
     end
     
-    def self.cache
-      @cache ||= YAML.load_file(cache_path) rescue {}
+    def self.cache       
+      @cache ||= (YAML.load_file(cache_path) rescue {})
     end
     
     def self.cache_path
@@ -20,8 +20,8 @@ module AssetID
     end
     
     def self.hit?(asset)
-      return true if cache[asset.relative_path] and cache[asset.relative_path][:fingerprint] == asset.fingerprint
-      cache[asset.relative_path] = {:expires => asset.expiry_date.to_s, :fingerprint => asset.fingerprint}
+      return true if cache[asset.relative_path] && (cache[asset.relative_path][:fingerprint] == asset.fingerprint)
+      cache[asset.relative_path] = {:expires => asset.expiry_date.to_s, :fingerprint => asset.fingerprint} 
       false
     end
   
@@ -30,7 +30,9 @@ module AssetID
     end
     
     def self.save!
-      File.open(cache_path, 'w') {|f| f.write(YAML.dump(cache))}
+      File.open(cache_path, 'w') do |f| 
+        f.write(YAML.dump(cache))
+      end
     end
   
   end

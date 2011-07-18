@@ -40,14 +40,16 @@ module AssetID
     end
     
     def self.find(paths=Asset.asset_paths)
-      paths.inject([]) {|assets, path|
+      paths.inject([]) do |assets, path|
         path = File.join Rails.root, 'public', path
         a = Asset.new(path)
-        assets << a if a.is_file? and !a.cache_hit?
-        assets += Dir.glob(path+'/**/*').inject([]) {|m, file|
-          a = Asset.new(file); m << a if a.is_file? and !a.cache_hit?; m 
-        }
-      }
+        assets << a if a.is_file? && !a.cache_hit?
+        assets += Dir.glob(path+'/**/*').inject([]) do |m, file|
+          a = Asset.new(file)
+          m << a if a.is_file? && !a.cache_hit?
+          m 
+        end
+      end
     end
     
     def self.fingerprint(path)
@@ -77,7 +79,7 @@ module AssetID
     end
     
     def gzip_type?
-      Asset.gzip_types.include? mime_type
+      Asset.gzip_types.include?(mime_type)
     end
     
     def data
@@ -91,7 +93,7 @@ module AssetID
     def fingerprint
       p = relative_path
       return p if relative_path =~ /^\/assets\//
-      File.join File.dirname(p), "#{File.basename(p, File.extname(p))}-id-#{md5}#{File.extname(p)}"
+      File.join "/#{S3.fingerprint_prefix}", File.dirname(p), "#{File.basename(p, File.extname(p))}-id-#{md5}#{File.extname(p)}"
     end
     
     def mime_type
@@ -149,12 +151,12 @@ module AssetID
     end
     
     def is_file?
-      File.exists? absolute_path and !File.directory? absolute_path
+      File.exists? absolute_path and !File.directory?(absolute_path)
     end
     
     def cache_hit?
-      return false if @@nocache or Cache.miss? self
-      puts "AssetID: #{relative_path} - Cache Hit" 
+      return false if @@nocache || Cache.miss?(self)
+      puts "AssetID: #{relative_path} - Cache Hit" if @@debug
       return true 
     end
     

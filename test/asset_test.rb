@@ -1,7 +1,7 @@
+require 'rubygems'
 require 'test/unit'
 $:.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'asset_id'
-require 'rubygems'
 
 class AssetTest < Test::Unit::TestCase
   

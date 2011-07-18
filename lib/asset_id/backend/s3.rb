@@ -4,7 +4,7 @@ module AssetID
   class S3
   
     def self.s3_config
-      @@config ||= YAML.load_file(File.join(Rails.root, "config/asset_id.yml"))[Rails.env] rescue nil || {}
+      @@config ||= (YAML.load_file(File.join(Rails.root, "config/asset_id.yml"))[Rails.env] rescue nil) || {}
     end
   
     def self.connect_to_s3
@@ -30,6 +30,10 @@ module AssetID
       "http://#{s3_bucket}.s3.amazonaws.com"
     end
     
+    def self.fingerprint_prefix
+      s3_config['fingerprint_prefix'] || ""
+    end
+    
     def self.upload(options={})
       Asset.init(:debug => options[:debug], :nofingerprint => options[:nofingerprint])
       
@@ -38,8 +42,7 @@ module AssetID
     
       connect_to_s3
     
-      assets.each do |asset|
-      
+      assets.each do |asset|    
         puts "AssetID: #{asset.relative_path}" if options[:debug]
       
         headers = {
@@ -48,7 +51,7 @@ module AssetID
         }.merge(asset.cache_headers)
         
         asset.replace_css_images!(:prefix => s3_prefix) if asset.css?
-        
+       
         if asset.gzip_type?
           headers.merge!(asset.gzip_headers)
           asset.gzip!
@@ -56,7 +59,7 @@ module AssetID
         
         if options[:debug]
           puts "  - Uploading: #{asset.fingerprint} [#{asset.data.size} bytes]"
-          puts "  - Headers: #{headers.inspect}"
+          puts "  - Headers: #{headers.inspect}"        
         end
         
         unless options[:dry_run]
