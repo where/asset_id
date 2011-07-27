@@ -74,8 +74,24 @@ module AssetID
       path =~ /#{path_prefix}/ ? path : File.join(path_prefix, path)
     end
     
+    def based_path  
+      pos = [path.index("#"), path.index("?")].compact.min
+      
+      return path if pos.nil?
+    
+      path.slice(0, pos)
+    end
+    
+    def path_anchor_and_params
+      pos = [path.index("#"), path.index("?")].compact.min
+      
+      return "" if pos.nil?
+      
+      path.slice(pos..-1)
+    end
+    
     def relative_path
-      path.gsub(path_prefix, '')
+      based_path.gsub(path_prefix, '')
     end
     
     def gzip_type?
@@ -83,7 +99,7 @@ module AssetID
     end
     
     def data
-      @data ||= File.read(path)
+      @data ||= File.read(based_path)
     end
     
     def md5
@@ -93,11 +109,11 @@ module AssetID
     def fingerprint
       p = relative_path
       return p if relative_path =~ /^\/assets\//
-      File.join "/#{S3.fingerprint_prefix}", File.dirname(p), "#{File.basename(p, File.extname(p))}-id-#{md5}#{File.extname(p)}"
+      File.join "/#{S3.fingerprint_prefix}", File.dirname(p), "#{File.basename(p, File.extname(p))}-id-#{md5}#{File.extname(p)}#{path_anchor_and_params}"
     end
     
     def mime_type
-      MIME::Types.of(path).first.to_s
+      MIME::Types.of(based_path).first.to_s
     end
     
     def css?
