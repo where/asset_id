@@ -127,10 +127,13 @@ module AssetID
         begin
           # $1 is the double quoted string, $2 is single quoted, $3 is no quotes
           uri = ($1 || $2 || $3).to_s.strip
+
           uri.gsub!(/^\.\.\//, '/')
           
           # if the uri appears to begin with a protocol then the asset isn't on the local filesystem
           if uri =~ /[a-z]+:\/\//i
+            "url(#{uri})"
+          elsif uri =~ /^data:font/
             "url(#{uri})"
           else
             asset = Asset.new(uri)
